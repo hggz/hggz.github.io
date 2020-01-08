@@ -1,6 +1,7 @@
 import Foundation
 import Publish
 import Plot
+import SplashPublishPlugin
 
 // This type acts as the configuration for your website.
 struct Hggzgithubio: Website {
@@ -23,4 +24,12 @@ struct Hggzgithubio: Website {
 }
 
 // This will generate your website using the built-in Foundation theme:
-try Hggzgithubio().publish(withTheme: .hggz)
+try Hggzgithubio().publish(using: [
+    .installPlugin(.splash(withClassPrefix: "")),
+    .addMarkdownFiles(),
+    .copyResources(),
+    .sortItems(by: \.date, order: .descending),
+    .generateHTML(withTheme: .hggz, indentation: .tabs(1)),
+    .generateRSSFeed(including: [.posts]),
+    .generateSiteMap()
+])
