@@ -1,7 +1,7 @@
 ---
 date: 2020-01-07 14:10
 description: Pretty printing dates with foundation.
-tags: article, extension, date, foundation
+tags: extension, date, foundation
 ---
 # What is time?
 
