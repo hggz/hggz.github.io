@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="og:site_name" content="Silverpoint"/>
+		<link rel="canonical" href="https://hggz.github.io/posts/p3"/>
+		<meta name="twitter:url" content="https://hggz.github.io/posts/p3"/>
+		<meta name="og:url" content="https://hggz.github.io/posts/p3"/>
+		<title>So you want to theme a swift site? | Silverpoint</title>
+		<meta name="twitter:title" content="So you want to theme a swift site? | Silverpoint"/>
+		<meta name="og:title" content="So you want to theme a swift site? | Silverpoint"/>
+		<meta name="description" content="Adding my first custom theme to Silverpoint."/>
+		<meta name="twitter:description" content="Adding my first custom theme to Silverpoint."/>
+		<meta name="og:description" content="Adding my first custom theme to Silverpoint."/>
+		<meta name="twitter:card" content="summary"/>
+		<link rel="stylesheet" href="/styles.css" type="text/css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link rel="shortcut icon" href="/images/favicon.png" type="image/png"/>
+		<link rel="alternate" href="/feed.rss" type="application/rss+xml" title="Subscribe to Silverpoint"/>
+	</head>
+	<body class="item-page">
+		<header>
+			<div class="wrapper">
+				<a href="/">
+					<img src="https://fontmeme.com/permalink/200106/3d93d1def8893f3017bfd269b56be394.png" alt="Silverpoint"/>
+				</a>
+				<br/>
+				<a class="custom-header">A journal written in <i>Swift</i> by Hugo A.G</a>
+				<nav>
+					<ul>
+						<li>
+							<a class="section-header-selected" href="/posts">Posts</a>
+						</li>
+						<li>
+							<a class="section-header" href="/about">About</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<div class="wrapper">
+			<article>
+				<div class="content"><h1>So you want to theme a swift site?</h1><p>I only have positive things to say about <a href="https://github.com/JohnSundell">John Sundell</a> after working with his suite of swift web framework tools. Naturally the first thing I set out to do after setting up the publish template was to personalize it with a custom theme.</p><p>This post details the steps I took in order to accomplish that. For more details on the original implementation documentation, feel free to <a href="https://github.com/JohnSundell/Publish#building-an-html-theme">this</a> out</p><h2>Setting up your theme extension</h2><p>Normally you would rely on a variation of customized style sheets with some scripting languages here or there (especially with frameworks such as React or Rails) to get the job done with traditional static / dynamic web frameworks.</p><p>In Publish's case, we're able to still rely on css while also relying on statically typed conventions thanks to the underlying pure swift HTML generation provided by <code class="inline">Plot</code>. The way we do that is by first creating a <code class="inline">Theme </code>extension with a single statically defined member to function as the theme's name. We will also be creating a struct that follows the <code class="inline">HTMLFactory</code> protocol to leverage Plot's HTML creation engine.</p><p>I will be specifying this theme to interface directly with my site as well.</p><p><em>NOTE: As of this post, Silverpoint was constructed as a personal github pages site and thus is named to follow that naming <a href="https://pages.github.com">convention</a>.</em></p><pre><code><span class="keyword">import</span> Publish
+<span class="keyword">import</span> Plot
+
+<span class="keyword">extension</span> <span class="type">Theme</span> <span class="keyword">where</span> <span class="type">Site</span> == <span class="type">Hggzgithubio</span> {
+    <span class="keyword">static var</span> hggz: <span class="type">Self</span> {
+        <span class="type">Theme</span>(
+            htmlFactory: <span class="type">HggzHTMLFactory</span>()
+        )
+    }
+}
+</code></pre><p>You'll notice at this point that we have yet to define our <code class="inline">HTMLFactory</code> struct that follows the conventions set in place for laying out our sites various html pages. We'll cover that next.</p><h2>Creating your theme's HTML</h2><p>At its core, all a web browser needs to display content is an html file. You can format your website in any order or style by supplying it the html files of its pages. The way Publish organizes its content is through the use of 3 logical representations: <b>Sections</b>, <b>items</b> and <b>pages</b>.</p><p>As pointed out on the Publish framework's readme, each <code class="inline">Section</code>, <code class="inline">Item</code>, and <code class="inline">Page</code> can define its own set of Content — which can range from text (like titles and descriptions), to HTML, audio, video and various kinds of metadata.</p><p>We'll start off by declaring our struct that conforms to the <code class="inline">HTMLFactory</code> protocol.</p><pre><code><span class="keyword">private struct</span> HggzHTMLFactory: <span class="type">HTMLFactory</span> {
+    <span class="keyword">typealias</span> Site = <span class="type">HggzGithubio</span>
+    
+    <span class="keyword">func</span> makePageHTML(for page: <span class="type">Page</span>, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span> { }
+
+    <span class="keyword">func</span> makeIndexHTML(for index: <span class="type">Index</span>, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span> { }
+
+    <span class="keyword">func</span> makeTagListHTML(for page: <span class="type">TagListPage</span>, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span>? { }
+
+    <span class="keyword">func</span> makeTagDetailsHTML(for page: <span class="type">TagDetailsPage</span>, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span>? { }
+
+    <span class="keyword">func</span> makeItemHTML(for item: <span class="type">Item</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span> { }
+
+    <span class="keyword">func</span> makeSectionHTML(for section: <span class="type">Section</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;, context: <span class="type">PublishingContext</span>&lt;<span class="type">HggzHTMLFactory</span>.<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span> { }
+}
+</code></pre><p>The following snippet shows the available functions available from the <code class="inline">HTMLFactory</code> protocol as well as the overriding of the <code class="inline">Site</code> associtedtype so the generic constraints in the struct know that we're referring to our specific site. This allows us to access some of the site specific properties our site has in the factory class, like our specific sectionId's, our metadata, etc.</p><p>You can use these functions to describe how each section's HTML will look, as well as the html in all the various other parts of our site such as the specific items (our posts like this one).</p><p>When populating each of the functions, you need to provide it some type safe swift HTML. You write it using Plot's html structures in a format similar to how you would lay out regular html tags. Heres an example of how you can lay out the html for the index of the website.</p><pre><code><span class="keyword">func</span> makeIndexHTML(for index: <span class="type">Index</span>,
+                   context: <span class="type">PublishingContext</span>&lt;<span class="type">Site</span>&gt;) <span class="keyword">throws</span> -&gt; <span class="type">HTML</span> {
+    <span class="type">HTML</span>(
+        .<span class="call">lang</span>(context.<span class="property">site</span>.<span class="property">language</span>),
+        .<span class="call">head</span>(for: index, on: context.<span class="property">site</span>),
+        .<span class="call">body</span>(
+            .<span class="call">header</span>(for: context, selectedSection: <span class="keyword">nil</span>),
+            .<span class="call">wrapper</span>(
+                .<span class="call">h1</span>(.<span class="call">text</span>(index.<span class="property">title</span>)),
+                .<span class="call">itemList</span>(
+                    for: context.<span class="call">allItems</span>(
+                        sortedBy: \.<span class="property">date</span>,
+                        order: .<span class="dotAccess">descending</span>
+                    ),
+                    on: context.<span class="property">site</span>
+                )
+            ),
+            .<span class="call">footer</span>(for: context.<span class="property">site</span>)
+        )
+    )
+}
+</code></pre><p>I decided to rely heavily on the initial <code class="inline">Foundation</code> theme provided by JohnSundell <a href="https://github.com/JohnSundell/Publish/commit/ef3cd95bc4b4307c516b7538c6c2dfcc943fc7a8#diff-e4f4d4927f56c44345fc9efc87ff25e2">here</a>. Hopefully once you check it out you'll see how extensible it is to modify it for your needs.</p><p>It was in the <code class="inline">itemList</code> helper function that I leveraged my <a href="/posts/p2/">prettyPrint Date extension function</a> to display dates on each post.</p><pre><code><span class="keyword">static func</span> itemList&lt;T: <span class="type">Website</span>&gt;(for items: [<span class="type">Item</span>&lt;<span class="type">T</span>&gt;], on site: <span class="type">T</span>) -&gt; <span class="type">Node</span> {
+    <span class="keyword">return</span> .<span class="call">ul</span>(
+        .<span class="call">class</span>(<span class="string">"item-list"</span>),
+        .<span class="call">forEach</span>(items) { item <span class="keyword">in</span>
+            .<span class="call">li</span>(.<span class="call">article</span>(
+                .<span class="call">h1</span>(.<span class="call">a</span>(
+                    .<span class="call">href</span>(item.<span class="property">path</span>),
+                    .<span class="call">text</span>(item.<span class="property">title</span>)
+                    )),
+                .<span class="call">p</span>(.<span class="call">class</span>(<span class="string">"date-text"</span>), .<span class="dotAccess">text</span>(item.<span class="property">date</span>.<span class="call">prettyPrintDate</span>())),
+                .<span class="call">br</span>(),
+                .<span class="call">tagList</span>(for: item, on: site),
+                .<span class="call">p</span>(.<span class="call">text</span>(item.<span class="property">description</span>))
+                ))
+        }
+    )
+}
+
+</code></pre><h2>Adding your CSS</h2><p>You'll notice in the snippet above that the HTML is leveraging 2 'classes'. One for the list ('item-list') and one for the date ('date-text'). Thats no mistake. Those elements are leveraging a css style sheet for those classes.</p><p>In order to have Publish utilize your custom css, you must provide your theme a resource path pointing to it. You do this in the static member <code class="inline">Theme</code> declaration above.</p><pre><code><span class="keyword">extension</span> <span class="type">Theme</span> <span class="keyword">where</span> <span class="type">Site</span> == <span class="type">Hggzgithubio</span> {
+    <span class="keyword">static var</span> hggz: <span class="type">Self</span> {
+        <span class="type">Theme</span>(
+            htmlFactory: <span class="type">HggzHTMLFactory</span>(),
+            resourcePaths: [<span class="string">"Resources/HggzTheme/styles.css"</span>]
+        )
+    }
+}
+</code></pre><p>I created a <code class="inline">Resources</code> directory in the root directory with the <code class="inline">Package.swift</code> file and followed the convention above with a subdirectory named after the theme and the actual css file. I also leveraged the <a href="https://github.com/JohnSundell/Publish/commit/ef3cd95bc4b4307c516b7538c6c2dfcc943fc7a8#diff-98456e10ede04c3921630ce432dac1cd">css file</a> utilized by the <code class="inline">Foundation</code> theme as a starting point and modified it myself.</p><h2>Testing your changes</h2><p>With all this said and done, all that was left was updating the <code class="inline">main.swift</code> file to use your new theme. You should now be able to see your changes on the browser.</p><p>The Publish framework has a provided CLI application that handles most of the development needs for any website work. I developed the site on XCode but should have been perfectly capable handling the development on any other platform.</p><p>My personal workflow consisted of me running the local development server by running <code class="inline">publish run</code> in the project directory and running the site binary on XCode everytime I wanted to visualize changes. I was able to view my site on http://localhost:8000.</p><p><em>NOTE: As of this post, I noticed that some css changes weren't immediately reflected after refreshing the browser page. I got around this by doing a hard refresh in the browser. I used Safari and Chrome to test my changes.</em></p></div>
+				<span>Tagged with: </span>
+				<ul class="tag-list">
+					<li>
+						<a href="/tags/publish">publish</a>
+					</li>
+					<li>
+						<a href="/tags/blog">blog</a>
+					</li>
+					<li>
+						<a href="/tags/site">site</a>
+					</li>
+					<li>
+						<a href="/tags/theme">theme</a>
+					</li>
+				</ul>
+			</article>
+		</div>
+		<footer>
+			<p>Generated using 
+				<a href="https://github.com/johnsundell/publish">Publish</a> with ♥️ in San Francisco
+			</p>
+			<p>
+				<a href="/feed.rss">RSS feed</a>
+			</p>
+		</footer>
+	</body>
+</html>
