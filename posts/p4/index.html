@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="og:site_name" content="Silverpoint"/>
+		<link rel="canonical" href="https://hggz.github.io/posts/p4"/>
+		<meta name="twitter:url" content="https://hggz.github.io/posts/p4"/>
+		<meta name="og:url" content="https://hggz.github.io/posts/p4"/>
+		<title>If it hurts, do it more frequently, and bring the pain forward | Silverpoint</title>
+		<meta name="twitter:title" content="If it hurts, do it more frequently, and bring the pain forward | Silverpoint"/>
+		<meta name="og:title" content="If it hurts, do it more frequently, and bring the pain forward | Silverpoint"/>
+		<meta name="description" content="Automatically updating my site with github pages."/>
+		<meta name="twitter:description" content="Automatically updating my site with github pages."/>
+		<meta name="og:description" content="Automatically updating my site with github pages."/>
+		<meta name="twitter:card" content="summary"/>
+		<link rel="stylesheet" href="/styles.css" type="text/css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link rel="shortcut icon" href="/images/favicon.png" type="image/png"/>
+		<link rel="alternate" href="/feed.rss" type="application/rss+xml" title="Subscribe to Silverpoint"/>
+	</head>
+	<body class="item-page">
+		<header>
+			<div class="wrapper">
+				<a href="/">
+					<img src="https://fontmeme.com/permalink/200106/3d93d1def8893f3017bfd269b56be394.png" alt="Silverpoint"/>
+				</a>
+				<br/>
+				<a class="custom-header">A journal written in <i>Swift</i> by Hugo A.G</a>
+				<nav>
+					<ul>
+						<li>
+							<a class="section-header-selected" href="/posts">Posts</a>
+						</li>
+						<li>
+							<a class="section-header" href="/about">About</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<div class="wrapper">
+			<article>
+				<div class="content"><h1>If it hurts, do it more frequently, and bring the pain forward</h1><p>Thats a fun quote that sounds nonsensical at the surface level but is rooted in valuable meaning. The more frequent you do something painful, the less painful it'll seem. Thats where <a href="https://en.wikipedia.org/wiki/Continuous_integration">Continuous Integration</a> comes into play.</p><p>This blog post is about how I managed to host Silverpoint on github and to set it up so that anytime I commit my changes to the site, they get updated on the internet as well without me having to lift another finger.</p><h2>Hosting through Github Pages</h2><p>In the past I've leveraged anything from <a href="https://godaddy.com">godaddy</a> or <a href="https://hostgator.com">hostgator</a> to Amazon's server infrastructure or even S3 static buckets for website hosting. In the spirit of trying new things I decided to give github a chance this time around.</p><p><a href="https://pages.github.com">Github</a> allows you to serve websites from the git repository containing its code as long as long as you follow a specific naming convention and your repo has an index.html file. This is pretty convenient for people who want to host their own personal site or their company site without having to rely on a more complicated third party provider.</p><p>After setting up my empty <a href="https://github.com/hggz/hggz.github.io">repository</a> I was pretty much halfway done. The next part gets a little tricky though.</p><h2>Website Content and Personal Repositories</h2><p>As of this post's creation, github only allows personal websites to be served from the <code class="inline">master</code> branch of a repository. That means that all your website code (especially the <strong>index.html</strong>) has to live in your <code class="inline">master</code> branch. Organizations on the other hand can point their website code to a specific branch to be served from. Since I chose to have Silverpoint hosted as a personal repository, I had to work around this limitation.</p><p>Since all the HTML that <strong>Publish</strong> generates lives inside of the <strong>Output</strong> folder, I created a separate repository that only contained the contents of this Output folder and set that as the master branch. I kept all the other <strong>Publish</strong> specific files separate from this folder for this step.</p><p>Once this master branch was created and pushed up to the github repository, I was already able to access <a href="https://hggz.github.io">Silverpoint</a> via the github pages domain link. Afterwards I created a separate branch in this repository (called <strong>develop</strong>) that contained all of the <em>Publish</em> specific sources such as the <code class="inline">Package.swift</code> file, the <code class="inline">Content</code> folder, <code class="inilne">Resources</code>, etc. Now we're ready to set up the repository to automatically update itself when we push to Github.</p><h2>Continuous Integration Setup</h2><p>Recently Github released their CI flow known as <a href="https://github.com/features/actions">Github Actions</a> to the general public. This allows us to specify a workflow in our project to be executed after pushing up a commit to our repository.</p><p>For our purposes, we need a workflow that will run Publish's CLI and generate our static site's new changes in the <code class="inline">Output</code> folder.</p><p>For that we need a build instance that has Swift installed as well as Publish's CI in order to run the <code class="inline">publish run</code> command inside our repo. Finally, once that command is run, we have to make sure we publish our changes to the target branch of the repository that's serving our content. In our case, since this is a personal github page, we can only serve website content on the <strong>master</strong> branch as explained above.</p><h2>Integrating the Github Action</h2><p>The first thing I had to do was setup my github workflows folder in my project. I checked out my <strong>develop</strong> branch that contains all the Publish sources and created the <code class="inline">.github/workflows/</code> directories. Inside I placed a <strong>YAML</strong> file called <code class="inilne">gh-pages.yml</code>. Github will use this file to know what configuration workflow it has to run. In our case, it'll contain details for downloading swift and running the <strong>publish cli</strong>.</p><p>Afterwards I was able to save some time by finding a ready-made <a href="https://github.com/marketplace/actions/swift-publish-generate-static-site">github action</a> that <a href="https://github.com/joeblau">Joe Blau</a> made which handles most of the workflow we need. Feel free to follow the instructions provided at the action page, otherwise heres a summary of the steps.</p><ol><li><strong>Generate your deploy key with the following command.</strong></li></ol><pre><code>ssh-keygen -t rsa -b <span class="number">4096</span> -<span class="type">C</span> <span class="string">"$(git config user.email)"</span> -f gh-pages -<span class="type">N</span> <span class="string">""</span>
+# <span class="type">You</span> will <span class="keyword">get</span> <span class="number">2</span> files:
+#   gh-pages.<span class="dotAccess">pub</span> (public key)
+#   gh-pages     (private key)
+</code></pre><ol start="2"><li><strong>Add SSH deploy key on GitHub.com Go to Repository Settings</strong><ul><li>Go to <strong>Deploy Keys</strong> and add your public key with the <strong>Allow write access</strong> permission. <br/> <img src="https://github.com/joeblau/publish-generate-action/raw/master/.github/images/deploy-keys-1.jpg" width="50%" height="50%"/> <img src="https://github.com/joeblau/publish-generate-action/raw/master/.github/images/deploy-keys-2.jpg" width="50%" height="50%"/></li><li>Go to <strong>Secrets</strong> and add your private key as <code class="inline">ACTIONS_DEPLOY_KEY</code> <br/> <img src="https://github.com/joeblau/publish-generate-action/raw/master/.github/images/secrets-1.jpg" width="50%" height="50%"/> <img src="https://github.com/joeblau/publish-generate-action/raw/master/.github/images/secrets-2.jpg" width="50%" height="50%"/></li></ul></li></ol><ol start="3"><li><strong>Update the project YAML file at .github/workflows/gh-pages.yml and push to the default branch.</strong> <br/> <br/> <em>Note: In our case, the <strong>push branch</strong> and the <strong>publish branches</strong> are different</em> <br/> <br/></li></ol><pre><code>name: <span class="type">Github Pages</span>
+
+on:
+  push:
+    branches:
+    - develop 
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: <span class="type">Checkout</span>
+      uses: actions/checkout@v1
+      
+    - name: <span class="type">Install Swift</span>
+      uses: <span class="type">YOCKOW</span>/<span class="type">Action</span>-setup-swift@master
+      with:
+        swift-version: '<span class="number">5.1.2</span>'
+        
+    - name: <span class="type">Build Publish</span>
+      run: |
+        git clone https://github.<span class="property">com</span>/<span class="type">JohnSundell</span>/<span class="type">Publish</span>.<span class="property">git</span>
+        cd <span class="type">Publish</span>
+        swift build -c release
+        sudo install .<span class="dotAccess">build</span>/release/publish-cli /usr/local/bin/publish
+
+    - name: <span class="type">Generate Site</span>
+      run: publish generate
+
+    - name: <span class="type">Deploy</span>
+      uses: peaceiris/actions-gh-pages@v2
+      env:
+        <span class="type">ACTIONS_DEPLOY_KEY</span>: ${{ secrets.<span class="type">ACTIONS_DEPLOY_KEY</span> }}
+        <span class="type">PUBLISH_BRANCH</span>: master
+        <span class="type">PUBLISH_DIR</span>: ./<span class="type">Output</span>
+
+</code></pre><p>Once you push up your <strong>on push</strong> branch specified in the YAML (<strong>develop</strong> in my case) you should be able to check the status of your deployment and the final result on your <strong>PUBLISH_BRANCH</strong> From here on out, enjoy the speed and convenience of pushing up changes to your Swift Site!</p></div>
+				<span>Tagged with: </span>
+				<ul class="tag-list">
+					<li>
+						<a href="/tags/github">github</a>
+					</li>
+					<li>
+						<a href="/tags/blog">blog</a>
+					</li>
+					<li>
+						<a href="/tags/site">site</a>
+					</li>
+					<li>
+						<a href="/tags/ci">ci</a>
+					</li>
+				</ul>
+			</article>
+		</div>
+		<footer>
+			<p>Generated using 
+				<a href="https://github.com/johnsundell/publish">Publish</a> with ♥️ in San Francisco
+			</p>
+			<p>
+				<a href="/feed.rss">RSS feed</a>
+			</p>
+		</footer>
+	</body>
+</html>
