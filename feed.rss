@@ -1,4 +1,156 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>Silverpoint</title><description>A journal written in &lt;i&gt;Swift&lt;/i&gt; by Hugo A.G</description><link>https://hggz.github.io</link><language>en</language><lastBuildDate>Mon, 13 Jan 2020 00:09:15 +0000</lastBuildDate><pubDate>Mon, 13 Jan 2020 00:09:15 +0000</pubDate><ttl>250</ttl><atom:link href="https://hggz.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://hggz.github.io/posts/p4</guid><title>If it hurts, do it more frequently, and bring the pain forward</title><description>Automatically updating my site with github pages.</description><link>https://hggz.github.io/posts/p4</link><pubDate>Thu, 9 Jan 2020 12:00:00 +0000</pubDate><content:encoded><![CDATA[<h1>If it hurts, do it more frequently, and bring the pain forward</h1><p>Thats a fun quote that sounds nonsensical at the surface level but is rooted in valuable meaning. The more frequent you do something painful, the less painful it'll seem. Thats where <a href="https://en.wikipedia.org/wiki/Continuous_integration">Continuous Integration</a> comes into play.</p><p>This blog post is about how I managed to host Silverpoint on github and to set it up so that anytime I commit my changes to the site, they get updated on the internet as well without me having to lift another finger.</p><h2>Hosting through Github Pages</h2><p>In the past I've leveraged anything from <a href="https://godaddy.com">godaddy</a> or <a href="https://hostgator.com">hostgator</a> to Amazon's server infrastructure or even S3 static buckets for website hosting. In the spirit of trying new things I decided to give github a chance this time around.</p><p><a href="https://pages.github.com">Github</a> allows you to serve websites from the git repository containing its code as long as long as you follow a specific naming convention and your repo has an index.html file. This is pretty convenient for people who want to host their own personal site or their company site without having to rely on a more complicated third party provider.</p><p>After setting up my empty <a href="https://github.com/hggz/hggz.github.io">repository</a> I was pretty much halfway done. The next part gets a little tricky though.</p><h2>Website Content and Personal Repositories</h2><p>As of this post's creation, github only allows personal websites to be served from the <code class="inline">master</code> branch of a repository. That means that all your website code (especially the <strong>index.html</strong>) has to live in your <code class="inline">master</code> branch. Organizations on the other hand can point their website code to a specific branch to be served from. Since I chose to have Silverpoint hosted as a personal repository, I had to work around this limitation.</p><p>Since all the HTML that <strong>Publish</strong> generates lives inside of the <strong>Output</strong> folder, I created a separate repository that only contained the contents of this Output folder and set that as the master branch. I kept all the other <strong>Publish</strong> specific files separate from this folder for this step.</p><p>Once this master branch was created and pushed up to the github repository, I was already able to access <a href="https://hggz.github.io">Silverpoint</a> via the github pages domain link. Afterwards I created a separate branch in this repository (called <strong>develop</strong>) that contained all of the <em>Publish</em> specific sources such as the <code class="inline">Package.swift</code> file, the <code class="inline">Content</code> folder, <code class="inilne">Resources</code>, etc. Now we're ready to set up the repository to automatically update itself when we push to Github.</p><h2>Continuous Integration Setup</h2><p>Recently Github released their CI flow known as <a href="https://github.com/features/actions">Github Actions</a> to the general public. This allows us to specify a workflow in our project to be executed after pushing up a commit to our repository.</p><p>For our purposes, we need a workflow that will run Publish's CLI and generate our static site's new changes in the <code class="inline">Output</code> folder.</p><p>For that we need a build instance that has Swift installed as well as Publish's CI in order to run the <code class="inline">publish run</code> command inside our repo. Finally, once that command is run, we have to make sure we publish our changes to the target branch of the repository that's serving our content. In our case, since this is a personal github page, we can only serve website content on the <strong>master</strong> branch as explained above.</p><h2>Integrating the Github Action</h2><p>The first thing I had to do was setup my github workflows folder in my project. I checked out my <strong>develop</strong> branch that contains all the Publish sources and created the <code class="inline">.github/workflows/</code> directories. Inside I placed a <strong>YAML</strong> file called <code class="inilne">gh-pages.yml</code>. Github will use this file to know what configuration workflow it has to run. In our case, it'll contain details for downloading swift and running the <strong>publish cli</strong>.</p><p>Afterwards I was able to save some time by finding a ready-made <a href="https://github.com/marketplace/actions/swift-publish-generate-static-site">github action</a> that <a href="https://github.com/joeblau">Joe Blau</a> made which handles most of the workflow we need. Feel free to follow the instructions provided at the action page, otherwise heres a summary of the steps.</p><ol><li><strong>Generate your deploy key with the following command.</strong></li></ol><pre><code>ssh-keygen -t rsa -b <span class="number">4096</span> -<span class="type">C</span> <span class="string">"$(git config user.email)"</span> -f gh-pages -<span class="type">N</span> <span class="string">""</span>
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>Silverpoint</title><description>A journal written in &lt;i&gt;Swift&lt;/i&gt; by Hugo A.G</description><link>https://hggz.github.io</link><language>en</language><lastBuildDate>Tue, 14 Jan 2020 05:24:46 +0000</lastBuildDate><pubDate>Tue, 14 Jan 2020 05:24:46 +0000</pubDate><ttl>250</ttl><atom:link href="https://hggz.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://hggz.github.io/posts/p5</guid><title>Hilighting swift code in a publish site</title><description>Syntax Highlighting a Publish Site.</description><link>https://hggz.github.io/posts/p5</link><pubDate>Mon, 13 Jan 2020 15:37:00 +0000</pubDate><content:encoded><![CDATA[<h1>Hilighting swift code in a publish site</h1><p>If you've made it this far I'll assume you've seen a code snippet or two on Silverpoint. Unless of course, this is the first article you've visited. If its the former then you'll notice that all the code snippets (especially the swift ones) have syntax hilighting to them. This post aims to show you how I did it.</p><h2>A bit of CSS here and there</h2><p>Code hilighting on the web generally starts with some css and this was no different. I started off by defining some <code class="inline">code</code> html tag specific style in my theme's CSS.<br><br><code class="inline">
+.inline {
+<br/>
+    background-color: #eee;
+<br/>    
+    border-radius: 3px;
+<br/>    
+    font-family: courier, monospace;
+<br/>    
+    padding: 0 3px;
+<br/>    
+}
+<br/>
+
+<br/>
+pre {
+<br/>
+    margin-bottom: 1.5em;
+<br/>    
+    background-color: #1a1a1a;
+<br/>    
+    padding: 16px 0;
+<br/>    
+    border-radius: 16px;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code {
+<br/>
+    font-family: monospace;
+<br/>    
+    display: block;
+<br/>    
+    padding: 0 20px;
+<br/>    
+    color: #a9bcbc;
+<br/>    
+    line-height: 1.4em;
+<br/>    
+    font-size: 0.95em;
+<br/>    
+    overflow-x: auto;
+<br/>    
+    white-space: pre;
+<br/>    
+    -webkit-overflow-scrolling: touch;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .keyword {
+<br/>
+    color: #e73289;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .type {
+<br/>
+    color: #8281ca;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .call {
+<br/>
+    color: #348fe5;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .property {
+<br/>
+    color: #21ab9d;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .number {
+<br/>
+    color: #db6f57;
+<br/>    
+}
+
+<br/>
+pre code .string {
+<br/>
+    color: #fa641e;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .comment {
+<br/>
+    color: #6b8a94;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .dotAccess {
+<br/>
+    color: #92b300;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .preprocessing {
+<br/>
+    color: #b68a00;
+<br/>    
+}
+<br/>
+</code></p><p>With the exception of the custom <code class="inline">.inline</code> general class I declared, I used the <a href="https://github.com/JohnSundell/Splash/blob/master/Examples/sundellsColors.css">example css file</a> John Sundell provided in his Splash HTML repository as a starting point. The next parts are pretty swift specific &gt;:)</p><h2>Integrating the Splash Publish plugin</h2><p>In order to get <em>true swift syntax hilighting</em> I used a readymade plugin created by John that had further syntax specific logic for the swift syntax. To start, all I had to do was add the plugin as a dependency in my Package.swift file. My Package.swift file ended up looking something like this.</p><pre><code><span class="comment">// swift-tools-version:5.1</span>
+
+<span class="keyword">import</span> PackageDescription
+
+<span class="keyword">let</span> package = <span class="type">Package</span>(
+    name: <span class="string">"Hggzgithubio"</span>,
+    products: [
+        .<span class="call">executable</span>(name: <span class="string">"Hggzgithubio"</span>, targets: [<span class="string">"Hggzgithubio"</span>])
+    ],
+    dependencies: [
+        .<span class="call">package</span>(url: <span class="string">"https://github.com/johnsundell/publish.git"</span>, from: <span class="string">"0.1.0"</span>),
+        .<span class="call">package</span>(url: <span class="string">"https://github.com/johnsundell/splashpublishplugin"</span>, from: <span class="string">"0.1.0"</span>)
+    ],
+    targets: [
+        .<span class="call">target</span>(
+            name: <span class="string">"Hggzgithubio"</span>,
+            dependencies: [<span class="string">"Publish"</span>, <span class="string">"SplashPublishPlugin"</span>]
+        )
+    ]
+)
+</code></pre><h2>Updating the site generator steps</h2><p>Last but not least, I had to apply this plugin in the lifecycle of the site's generator function in my <code class="inline">main.swift</code> file. To do this I referred to the base steps for generating a site manually on the <a href="https://github.com/JohnSundell/Publish">Publish</a> repository but made sure to add the splash plugin as well. I also made sure to import the <code class="inline">SplashPublishPlugin</code> in the same file.</p><pre><code><span class="keyword">import</span> SplashPublishPlugin
+<span class="keyword">try</span> <span class="type">Hggzgithubio</span>().<span class="call">publish</span>(using: [
+    .<span class="call">installPlugin</span>(.<span class="call">splash</span>(withClassPrefix: <span class="string">""</span>)),
+    .<span class="call">addMarkdownFiles</span>(),
+    .<span class="call">copyResources</span>(),
+    .<span class="call">sortItems</span>(by: \.<span class="property">date</span>, order: .<span class="dotAccess">descending</span>),
+    .<span class="call">generateHTML</span>(withTheme: .<span class="dotAccess">hggz</span>, indentation: .<span class="call">tabs</span>(<span class="number">1</span>)),
+    .<span class="call">generateRSSFeed</span>(including: [.<span class="dotAccess">posts</span>]),
+    .<span class="call">generateSiteMap</span>()
+])
+</code></pre><p>And there you have it. I had swift (and general) code syntax hilighting upon refreshing my site. I hope this helps anyone else embarking on the serverside swift journey via Publish.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://hggz.github.io/posts/p4</guid><title>If it hurts, do it more frequently, and bring the pain forward</title><description>Automatically updating my site with github pages.</description><link>https://hggz.github.io/posts/p4</link><pubDate>Thu, 9 Jan 2020 12:00:00 +0000</pubDate><content:encoded><![CDATA[<h1>If it hurts, do it more frequently, and bring the pain forward</h1><p>Thats a fun quote that sounds nonsensical at the surface level but is rooted in valuable meaning. The more frequent you do something painful, the less painful it'll seem. Thats where <a href="https://en.wikipedia.org/wiki/Continuous_integration">Continuous Integration</a> comes into play.</p><p>This blog post is about how I managed to host Silverpoint on github and to set it up so that anytime I commit my changes to the site, they get updated on the internet as well without me having to lift another finger.</p><h2>Hosting through Github Pages</h2><p>In the past I've leveraged anything from <a href="https://godaddy.com">godaddy</a> or <a href="https://hostgator.com">hostgator</a> to Amazon's server infrastructure or even S3 static buckets for website hosting. In the spirit of trying new things I decided to give github a chance this time around.</p><p><a href="https://pages.github.com">Github</a> allows you to serve websites from the git repository containing its code as long as long as you follow a specific naming convention and your repo has an index.html file. This is pretty convenient for people who want to host their own personal site or their company site without having to rely on a more complicated third party provider.</p><p>After setting up my empty <a href="https://github.com/hggz/hggz.github.io">repository</a> I was pretty much halfway done. The next part gets a little tricky though.</p><h2>Website Content and Personal Repositories</h2><p>As of this post's creation, github only allows personal websites to be served from the <code class="inline">master</code> branch of a repository. That means that all your website code (especially the <strong>index.html</strong>) has to live in your <code class="inline">master</code> branch. Organizations on the other hand can point their website code to a specific branch to be served from. Since I chose to have Silverpoint hosted as a personal repository, I had to work around this limitation.</p><p>Since all the HTML that <strong>Publish</strong> generates lives inside of the <strong>Output</strong> folder, I created a separate repository that only contained the contents of this Output folder and set that as the master branch. I kept all the other <strong>Publish</strong> specific files separate from this folder for this step.</p><p>Once this master branch was created and pushed up to the github repository, I was already able to access <a href="https://hggz.github.io">Silverpoint</a> via the github pages domain link. Afterwards I created a separate branch in this repository (called <strong>develop</strong>) that contained all of the <em>Publish</em> specific sources such as the <code class="inline">Package.swift</code> file, the <code class="inline">Content</code> folder, <code class="inilne">Resources</code>, etc. Now we're ready to set up the repository to automatically update itself when we push to Github.</p><h2>Continuous Integration Setup</h2><p>Recently Github released their CI flow known as <a href="https://github.com/features/actions">Github Actions</a> to the general public. This allows us to specify a workflow in our project to be executed after pushing up a commit to our repository.</p><p>For our purposes, we need a workflow that will run Publish's CLI and generate our static site's new changes in the <code class="inline">Output</code> folder.</p><p>For that we need a build instance that has Swift installed as well as Publish's CI in order to run the <code class="inline">publish run</code> command inside our repo. Finally, once that command is run, we have to make sure we publish our changes to the target branch of the repository that's serving our content. In our case, since this is a personal github page, we can only serve website content on the <strong>master</strong> branch as explained above.</p><h2>Integrating the Github Action</h2><p>The first thing I had to do was setup my github workflows folder in my project. I checked out my <strong>develop</strong> branch that contains all the Publish sources and created the <code class="inline">.github/workflows/</code> directories. Inside I placed a <strong>YAML</strong> file called <code class="inilne">gh-pages.yml</code>. Github will use this file to know what configuration workflow it has to run. In our case, it'll contain details for downloading swift and running the <strong>publish cli</strong>.</p><p>Afterwards I was able to save some time by finding a ready-made <a href="https://github.com/marketplace/actions/swift-publish-generate-static-site">github action</a> that <a href="https://github.com/joeblau">Joe Blau</a> made which handles most of the workflow we need. Feel free to follow the instructions provided at the action page, otherwise heres a summary of the steps.</p><ol><li><strong>Generate your deploy key with the following command.</strong></li></ol><pre><code>ssh-keygen -t rsa -b <span class="number">4096</span> -<span class="type">C</span> <span class="string">"$(git config user.email)"</span> -f gh-pages -<span class="type">N</span> <span class="string">""</span>
 # <span class="type">You</span> will <span class="keyword">get</span> <span class="number">2</span> files:
 #   gh-pages.<span class="dotAccess">pub</span> (public key)
 #   gh-pages     (private key)

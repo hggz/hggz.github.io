@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="og:site_name" content="Silverpoint"/>
+		<link rel="canonical" href="https://hggz.github.io/posts/p5"/>
+		<meta name="twitter:url" content="https://hggz.github.io/posts/p5"/>
+		<meta name="og:url" content="https://hggz.github.io/posts/p5"/>
+		<title>Hilighting swift code in a publish site | Silverpoint</title>
+		<meta name="twitter:title" content="Hilighting swift code in a publish site | Silverpoint"/>
+		<meta name="og:title" content="Hilighting swift code in a publish site | Silverpoint"/>
+		<meta name="description" content="Syntax Highlighting a Publish Site."/>
+		<meta name="twitter:description" content="Syntax Highlighting a Publish Site."/>
+		<meta name="og:description" content="Syntax Highlighting a Publish Site."/>
+		<meta name="twitter:card" content="summary"/>
+		<link rel="stylesheet" href="/styles.css" type="text/css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link rel="shortcut icon" href="/images/favicon.png" type="image/png"/>
+		<link rel="alternate" href="/feed.rss" type="application/rss+xml" title="Subscribe to Silverpoint"/>
+	</head>
+	<body class="item-page">
+		<header>
+			<div class="wrapper">
+				<a href="/">
+					<img src="https://fontmeme.com/permalink/200106/3d93d1def8893f3017bfd269b56be394.png" alt="Silverpoint"/>
+				</a>
+				<br/>
+				<a class="custom-header">A journal written in <i>Swift</i> by Hugo A.G</a>
+				<nav>
+					<ul>
+						<li>
+							<a class="section-header-selected" href="/posts">Posts</a>
+						</li>
+						<li>
+							<a class="section-header" href="/about">About</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<div class="wrapper">
+			<article>
+				<div class="content"><h1>Hilighting swift code in a publish site</h1><p>If you've made it this far I'll assume you've seen a code snippet or two on Silverpoint. Unless of course, this is the first article you've visited. If its the former then you'll notice that all the code snippets (especially the swift ones) have syntax hilighting to them. This post aims to show you how I did it.</p><h2>A bit of CSS here and there</h2><p>Code hilighting on the web generally starts with some css and this was no different. I started off by defining some <code class="inline">code</code> html tag specific style in my theme's CSS.<br><br><code class="inline">
+.inline {
+<br/>
+    background-color: #eee;
+<br/>    
+    border-radius: 3px;
+<br/>    
+    font-family: courier, monospace;
+<br/>    
+    padding: 0 3px;
+<br/>    
+}
+<br/>
+
+<br/>
+pre {
+<br/>
+    margin-bottom: 1.5em;
+<br/>    
+    background-color: #1a1a1a;
+<br/>    
+    padding: 16px 0;
+<br/>    
+    border-radius: 16px;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code {
+<br/>
+    font-family: monospace;
+<br/>    
+    display: block;
+<br/>    
+    padding: 0 20px;
+<br/>    
+    color: #a9bcbc;
+<br/>    
+    line-height: 1.4em;
+<br/>    
+    font-size: 0.95em;
+<br/>    
+    overflow-x: auto;
+<br/>    
+    white-space: pre;
+<br/>    
+    -webkit-overflow-scrolling: touch;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .keyword {
+<br/>
+    color: #e73289;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .type {
+<br/>
+    color: #8281ca;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .call {
+<br/>
+    color: #348fe5;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .property {
+<br/>
+    color: #21ab9d;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .number {
+<br/>
+    color: #db6f57;
+<br/>    
+}
+
+<br/>
+pre code .string {
+<br/>
+    color: #fa641e;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .comment {
+<br/>
+    color: #6b8a94;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .dotAccess {
+<br/>
+    color: #92b300;
+<br/>    
+}
+<br/>
+
+<br/>
+pre code .preprocessing {
+<br/>
+    color: #b68a00;
+<br/>    
+}
+<br/>
+</code></p><p>With the exception of the custom <code class="inline">.inline</code> general class I declared, I used the <a href="https://github.com/JohnSundell/Splash/blob/master/Examples/sundellsColors.css">example css file</a> John Sundell provided in his Splash HTML repository as a starting point. The next parts are pretty swift specific &gt;:)</p><h2>Integrating the Splash Publish plugin</h2><p>In order to get <em>true swift syntax hilighting</em> I used a readymade plugin created by John that had further syntax specific logic for the swift syntax. To start, all I had to do was add the plugin as a dependency in my Package.swift file. My Package.swift file ended up looking something like this.</p><pre><code><span class="comment">// swift-tools-version:5.1</span>
+
+<span class="keyword">import</span> PackageDescription
+
+<span class="keyword">let</span> package = <span class="type">Package</span>(
+    name: <span class="string">"Hggzgithubio"</span>,
+    products: [
+        .<span class="call">executable</span>(name: <span class="string">"Hggzgithubio"</span>, targets: [<span class="string">"Hggzgithubio"</span>])
+    ],
+    dependencies: [
+        .<span class="call">package</span>(url: <span class="string">"https://github.com/johnsundell/publish.git"</span>, from: <span class="string">"0.1.0"</span>),
+        .<span class="call">package</span>(url: <span class="string">"https://github.com/johnsundell/splashpublishplugin"</span>, from: <span class="string">"0.1.0"</span>)
+    ],
+    targets: [
+        .<span class="call">target</span>(
+            name: <span class="string">"Hggzgithubio"</span>,
+            dependencies: [<span class="string">"Publish"</span>, <span class="string">"SplashPublishPlugin"</span>]
+        )
+    ]
+)
+</code></pre><h2>Updating the site generator steps</h2><p>Last but not least, I had to apply this plugin in the lifecycle of the site's generator function in my <code class="inline">main.swift</code> file. To do this I referred to the base steps for generating a site manually on the <a href="https://github.com/JohnSundell/Publish">Publish</a> repository but made sure to add the splash plugin as well. I also made sure to import the <code class="inline">SplashPublishPlugin</code> in the same file.</p><pre><code><span class="keyword">import</span> SplashPublishPlugin
+<span class="keyword">try</span> <span class="type">Hggzgithubio</span>().<span class="call">publish</span>(using: [
+    .<span class="call">installPlugin</span>(.<span class="call">splash</span>(withClassPrefix: <span class="string">""</span>)),
+    .<span class="call">addMarkdownFiles</span>(),
+    .<span class="call">copyResources</span>(),
+    .<span class="call">sortItems</span>(by: \.<span class="property">date</span>, order: .<span class="dotAccess">descending</span>),
+    .<span class="call">generateHTML</span>(withTheme: .<span class="dotAccess">hggz</span>, indentation: .<span class="call">tabs</span>(<span class="number">1</span>)),
+    .<span class="call">generateRSSFeed</span>(including: [.<span class="dotAccess">posts</span>]),
+    .<span class="call">generateSiteMap</span>()
+])
+</code></pre><p>And there you have it. I had swift (and general) code syntax hilighting upon refreshing my site. I hope this helps anyone else embarking on the serverside swift journey via Publish.</p></div>
+				<span>Tagged with: </span>
+				<ul class="tag-list">
+					<li>
+						<a href="/tags/publish">publish</a>
+					</li>
+					<li>
+						<a href="/tags/blog">blog</a>
+					</li>
+					<li>
+						<a href="/tags/site">site</a>
+					</li>
+					<li>
+						<a href="/tags/theme">theme</a>
+					</li>
+				</ul>
+			</article>
+		</div>
+		<footer>
+			<p>Generated using 
+				<a href="https://github.com/johnsundell/publish">Publish</a> with ♥️ in San Francisco
+			</p>
+			<p>
+				<a href="/feed.rss">RSS feed</a>
+			</p>
+		</footer>
+	</body>
+</html>
