@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="og:site_name" content="Silverpoint"/>
+		<link rel="canonical" href="https://hggz.github.io/posts/p6"/>
+		<meta name="twitter:url" content="https://hggz.github.io/posts/p6"/>
+		<meta name="og:url" content="https://hggz.github.io/posts/p6"/>
+		<title>Removing an object with an unknown index from an array | Silverpoint</title>
+		<meta name="twitter:title" content="Removing an object with an unknown index from an array | Silverpoint"/>
+		<meta name="og:title" content="Removing an object with an unknown index from an array | Silverpoint"/>
+		<meta name="description" content="Different utility ways for removing objects from an array with an unknown index."/>
+		<meta name="twitter:description" content="Different utility ways for removing objects from an array with an unknown index."/>
+		<meta name="og:description" content="Different utility ways for removing objects from an array with an unknown index."/>
+		<meta name="twitter:card" content="summary"/>
+		<link rel="stylesheet" href="/styles.css" type="text/css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link rel="shortcut icon" href="/images/favicon.png" type="image/png"/>
+		<link rel="alternate" href="/feed.rss" type="application/rss+xml" title="Subscribe to Silverpoint"/>
+	</head>
+	<body class="item-page">
+		<header>
+			<div class="wrapper">
+				<a href="/">
+					<img src="https://fontmeme.com/permalink/200106/3d93d1def8893f3017bfd269b56be394.png" alt="Silverpoint"/>
+				</a>
+				<br/>
+				<a class="custom-header">A journal written in <i>Swift</i> by Hugo A.G</a>
+				<nav>
+					<ul>
+						<li>
+							<a class="section-header-selected" href="/posts">Posts</a>
+						</li>
+						<li>
+							<a class="section-header" href="/about">About</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</header>
+		<div class="wrapper">
+			<article>
+				<div class="content"><h1>Removing an object with an unknown index from an array</h1><p>Today's extension will introduce a utility function for removing objects with an unknown index from an array. There are multiple ways to go about doing this in <em>Swift</em> so I've decided to show three different approaches as well as my preferred way (as of the writing of this post).</p><h2>TLDR; Give me the code</h2><p>For those of you who just wan't the good stuff, here's the way I like to do this currently.</p><pre><code><span class="keyword">extension</span> <span class="type">Array</span> <span class="keyword">where</span> <span class="type">Element</span>: <span class="type">Equatable</span> {
+    <span class="keyword">mutating func</span> remove(<span class="keyword">_</span> object: <span class="type">Element</span>) {
+        <span class="keyword">guard let</span> index = <span class="call">firstIndex</span>(of: object) <span class="keyword">else</span> { <span class="keyword">return</span> }
+        <span class="call">remove</span>(at: index)
+    }
+}
+</code></pre><h2>Setting up your extension</h2><p>To apply to any and all types of arrays, we're going to first be creating an extension for the <code class="inline">Array</code> type and apply the generic clause stating that each <code class="inline">Element</code> must conform to the <code class="inline">Equatable</code> protocol.</p><p>This allows us to target any types of arrays that store comparable objects in them. With reference types such as classes, you can conform to the Equatable protocol to determine how two objects of the same class are the same.</p><p>The next step is to provide our <code class="inline">remove</code> function which will handle the operation. It's important to make this function <code class="inline">mutating</code> so that it also covers value types like structs.</p><p>The extension and function signature should look something like this.</p><pre><code><span class="keyword">extension</span> <span class="type">Array</span> <span class="keyword">where</span> <span class="type">Element</span>: <span class="type">Equatable</span> {
+    <span class="keyword">mutating func</span> remove(<span class="keyword">_</span> object: <span class="type">Element</span>) { }
+}
+</code></pre><p>Now we can fill up the function body.</p><h2>Method 1</h2><p>The first method involves finding the index of the object in question and then removing the object using that index.</p><pre><code><span class="keyword">guard let</span> index = <span class="call">firstIndex</span>(of: object) <span class="keyword">else</span> { <span class="keyword">return</span> }
+<span class="call">remove</span>(at: index)
+</code></pre><p>I like this method because I can dictate what behavior to occur easily in the event that the object in question isn't found, inside the guard return block.</p><h2>Method 2</h2><p>The other way you can handle this is by creating a new array from the existing array that filters out the object in question, and assigning it to the current array.</p><pre><code><span class="keyword">self</span> = <span class="keyword">self</span>.<span class="call">filter</span>(){$0 != object}
+</code></pre><p>I relied on the closure shorthand syntax to handle the filter operation. I personally don't like to rely on this method because of the fact that we're creating a new array from the existing one. For most general cases it's probably <em>OK</em> to do this, but if you have an array with thousands of beefy items, you'll probably notice the impact.</p><h2>Method 3</h2><p>The last method is really just a nicer version of the first one, that relies more on the shorthand closure syntax as well as the Swift mapping function to transform the resultant index of the object in question, if it finds one. Because the index retrieved from the <code class="inline">firstIndex</code> is an optional, this guarantees that the contents of the mapping function will execute if it does find one.</p><pre><code><span class="keyword">self</span>.<span class="call">firstIndex</span>(of: object).<span class="call">map</span> { <span class="keyword">self</span>.<span class="call">remove</span>(at: $0) }
+</code></pre></div>
+				<span>Tagged with: </span>
+				<ul class="tag-list">
+					<li>
+						<a href="/tags/extension">extension</a>
+					</li>
+					<li>
+						<a href="/tags/array">array</a>
+					</li>
+					<li>
+						<a href="/tags/equatable">equatable</a>
+					</li>
+					<li>
+						<a href="/tags/closure">closure</a>
+					</li>
+					<li>
+						<a href="/tags/generics">generics</a>
+					</li>
+				</ul>
+			</article>
+		</div>
+		<footer>
+			<p>Generated using 
+				<a href="https://github.com/johnsundell/publish">Publish</a> with ♥️ in San Francisco
+			</p>
+			<p>
+				<a href="/feed.rss">RSS feed</a>
+			</p>
+		</footer>
+	</body>
+</html>
